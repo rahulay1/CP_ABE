@@ -1,33 +1,37 @@
+# config.py
 import math
 import numpy as np
 import random
 
-# ── Scheme parameters ─────────────────────────────────────────────────────────
-
-# number of authorities
+# ── Scheme parameters (demo) ──────────────────────────────────────────────────
 N = 3
 
 # polynomial degree parameter: f = 2^v
-v = 2
-f = 1 << v  # = 4
+v = 9
+f = 1 << v  # 512
 
-# small modulus for toy
-q = 12289
+# prime modulus (NTT-friendly)
+# 2013265921 = 15 * 2^27 + 1 (prime)
+q = 2013265921
 
-# trapdoor digit‐expansion params
-b = 17
-k = math.floor(math.log(q, b)) + 1
-m = k + 2
+# gadget base and digit count
+b = 2
+k = math.floor(math.log(q, b)) + 1  # 31
+m = k + 2                           # 33
 
-# Gaussian widths (toy)
-sigma   = 3.2
-sigma_s = 8.2
-
-# vector dimension for RLWE
-V = f
+# Gaussian widths (kept for compatibility)
+sigma   = 2.8
+sigma_s = 3.2
 
 # total number of attributes (must be divisible by N)
-attr = 4
+attr = 33
 
-# fixed public “u” polynomial
-u = np.array([random.randrange(0, q) for _ in range(f)], dtype=int)
+# “u” polynomial (public) – kept for compatibility
+u = np.array([random.randrange(0, q) for _ in range(f)], dtype=np.int64)
+
+# numeric dtype
+DT = np.int64
+
+# RLWE vector dimension alias (used by older code)
+V = f
+
