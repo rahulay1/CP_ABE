@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 # ── Scheme parameters (demo) ──────────────────────────────────────────────────
-N = 3
+N = 1
 
 # polynomial degree parameter: f = 2^v
 v = 9
