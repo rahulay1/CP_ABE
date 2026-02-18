@@ -189,25 +189,47 @@ class User:
                     e1_minus = np.zeros((m, f), dtype=int)
 
                 # c1 branch(es)
-                if in_policy:
-                    # Emit the single branch that matches the user's bit
-                    bsel = b_plus_list[θ][i] if int(self.X[overall]) else b_minus_list[θ][i]
-                    C[f'c_{θ}_{i}_1'] = np.array(
-                        [poly_add(poly_mul(bsel[j], d), e1_plus[j]) for j in range(m)],
-                        dtype=int
-                    ) % q
+                # if in_policy:
+                #     # Emit the single branch that matches the user's bit
+                #     bsel = b_plus_list[θ][i] if int(self.X[overall]) else b_minus_list[θ][i]
+                #     C[f'c_{θ}_{i}_1'] = np.array(
+                #         [poly_add(poly_mul(bsel[j], d), e1_plus[j]) for j in range(m)],
+                #         dtype=int
+                #     ) % q
+                # else:
+                #     # Attribute not in policy: emit both branches so AA can pick
+                #     bp = b_plus_list[θ][i]
+                #     bm = b_minus_list[θ][i]
+                #     C[f'c_plus_{θ}_{i}_1'] = np.array(
+                #         [poly_add(poly_mul(bp[j], d), e1_plus[j]) for j in range(m)],
+                #         dtype=int
+                #     ) % q
+                #     C[f'c_minus_{θ}_{i}_1'] = np.array(
+                #         [poly_add(poly_mul(bm[j], d), e1_minus[j]) for j in range(m)],
+                #         dtype=int
+                #     ) % q
+                # Always emit BOTH branches (ciphertext must be user-independent)
+                bp = b_plus_list[θ][i]
+                bm = b_minus_list[θ][i]
+
+                # You can keep noise only when in_policy if you want, but simplest: always add noise
+                std1 = SIGMA_C1 if in_policy else 0.0
+                if std1 > 0:
+                    e1_plus = gen_multiple_polynomials(m, gaussian=True, std=std1)
+                    e1_minus = gen_multiple_polynomials(m, gaussian=True, std=std1)
                 else:
-                    # Attribute not in policy: emit both branches so AA can pick
-                    bp = b_plus_list[θ][i]
-                    bm = b_minus_list[θ][i]
-                    C[f'c_plus_{θ}_{i}_1'] = np.array(
-                        [poly_add(poly_mul(bp[j], d), e1_plus[j]) for j in range(m)],
-                        dtype=int
-                    ) % q
-                    C[f'c_minus_{θ}_{i}_1'] = np.array(
-                        [poly_add(poly_mul(bm[j], d), e1_minus[j]) for j in range(m)],
-                        dtype=int
-                    ) % q
+                    e1_plus = np.zeros((m, f), dtype=int)
+                    e1_minus = np.zeros((m, f), dtype=int)
+
+                C[f'c_plus_{θ}_{i}_1'] = np.array(
+                    [poly_add(poly_mul(bp[j], d), e1_plus[j]) for j in range(m)],
+                    dtype=int
+                ) % q
+
+                C[f'c_minus_{θ}_{i}_1'] = np.array(
+                    [poly_add(poly_mul(bm[j], d), e1_minus[j]) for j in range(m)],
+                    dtype=int
+                ) % q
 
         # small diagnostic to see how many rows actually reconstruct
         print(f"[enc] active rows used by reconstruction: {num_active} (<= {m})")

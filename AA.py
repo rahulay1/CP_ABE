@@ -154,15 +154,20 @@ class AA:
                     u_part = poly_add(u_part, poly_mul_scalar(cipher[f'c_{θ}_{i}_2'], gi))
 
                 # pick the proper branch of c_*_1
-                if int(W[overall]) == 1:
-                    # policy row was mapped for this attribute → single branch provided
-                    e_share = poly_add(e_share, poly_dotprod(cipher[f'c_{θ}_{i}_1'], self._SK[overall]))
+                # if int(W[overall]) == 1:
+                #     # policy row was mapped for this attribute → single branch provided
+                #     e_share = poly_add(e_share, poly_dotprod(cipher[f'c_{θ}_{i}_1'], self._SK[overall]))
+                # else:
+                #     # row not mapped: both branches present; select by X
+                #     if int(self.X[overall]) == 1:
+                #         e_share = poly_add(e_share, poly_dotprod(cipher[f'c_plus_{θ}_{i}_1'], self._SK[overall]))
+                #     else:
+                #         e_share = poly_add(e_share, poly_dotprod(cipher[f'c_minus_{θ}_{i}_1'], self._SK[overall]))
+                # Always select by X (ciphertext always has both branches)
+                if int(self.X[overall]) == 1:
+                    e_share = poly_add(e_share, poly_dotprod(cipher[f'c_plus_{θ}_{i}_1'], self._SK[overall]))
                 else:
-                    # row not mapped: both branches present; select by X
-                    if int(self.X[overall]) == 1:
-                        e_share = poly_add(e_share, poly_dotprod(cipher[f'c_plus_{θ}_{i}_1'], self._SK[overall]))
-                    else:
-                        e_share = poly_add(e_share, poly_dotprod(cipher[f'c_minus_{θ}_{i}_1'], self._SK[overall]))
+                    e_share = poly_add(e_share, poly_dotprod(cipher[f'c_minus_{θ}_{i}_1'], self._SK[overall]))
 
             E_partials.append(e_share % q)
 
