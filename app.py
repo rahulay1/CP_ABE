@@ -334,6 +334,10 @@ def api_encrypt():
         phi_bits = np.random.randint(0, 2, size=f, dtype=int)
         used_random = True
 
+    # DEBUG: print plaintext being encrypted (terminal)
+    phi_str = "".join(str(int(b)) for b in phi_bits.tolist())
+    print(f"[ENCRYPT] used_random={used_random} len={len(phi_str)} phi={phi_str}", flush=True)
+
     # Build LSSS from policy
     F_mat, rho = convert_policy_to_lsss(policy)
     F_mat = np.array(F_mat, dtype=int)

@@ -18,7 +18,7 @@
           </p>
         </div>
         <div class="text-xs text-gray-500">
-          attr length: <span class="font-semibold">{{ attr }}</span> · message length: <span class="font-semibold">512</span>
+          attr length: <span class="font-semibold">{{ attr }}</span> · message length: <span class="font-semibold">32</span>
         </div>
       </div>
 
@@ -98,12 +98,12 @@
           <div class="mt-4">
             <label class="block text-sm font-semibold mb-2">Message bitstring (512 bits)</label>
             <textarea id="messageBits" class="w-full border rounded-lg px-3 py-2 h-28 font-mono text-sm"
-                      placeholder="Leave empty to generate random 512-bit message"></textarea>
+                      placeholder="Leave empty to generate random 32-bit message"></textarea>
 
             <div class="flex flex-wrap items-center gap-3 mt-2">
               <button type="button" id="randMsgBtn"
                       class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
-                Random 512 bits
+                Random 32 bits
               </button>
               <button type="button" id="clearMsgBtn"
                       class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
@@ -247,6 +247,9 @@
 /* ---------------------------
    Utilities
 ---------------------------- */
+const MSG_LEN = 32;
+const rnd = genBits(MSG_LEN);
+
 const statusPill = document.getElementById("statusPill");
 function setStatus(msg){
   statusPill.textContent = msg || "";
@@ -286,19 +289,36 @@ function downloadJson(obj, filename){
   URL.revokeObjectURL(url);
 }
 
-function gen512Bits(){
+<!--function gen512Bits(){-->
+<!--  const bits = [];-->
+<!--  if (window.crypto && crypto.getRandomValues){-->
+<!--    const bytes = new Uint8Array(64); // 512 bits-->
+<!--    crypto.getRandomValues(bytes);-->
+<!--    for (let i=0;i<bytes.length;i++){-->
+<!--      const b = bytes[i];-->
+<!--      for (let k=7;k>=0;k&#45;&#45;) bits.push((b>>k)&1);-->
+<!--    }-->
+<!--  } else {-->
+<!--    for (let i=0;i<512;i++) bits.push(Math.random()<0.5 ? 0 : 1);-->
+<!--  }-->
+<!--  return bits.join("");-->
+<!--}-->
+
+function genBits(L){
   const bits = [];
+  const nBytes = Math.ceil(L / 8);
+
   if (window.crypto && crypto.getRandomValues){
-    const bytes = new Uint8Array(64); // 512 bits
+    const bytes = new Uint8Array(nBytes);
     crypto.getRandomValues(bytes);
-    for (let i=0;i<bytes.length;i++){
+    for (let i = 0; i < bytes.length; i++){
       const b = bytes[i];
-      for (let k=7;k>=0;k--) bits.push((b>>k)&1);
+      for (let k = 7; k >= 0; k--) bits.push((b >> k) & 1);
     }
   } else {
-    for (let i=0;i<512;i++) bits.push(Math.random()<0.5 ? 0 : 1);
+    for (let i = 0; i < nBytes * 8; i++) bits.push(Math.random() < 0.5 ? 0 : 1);
   }
-  return bits.join("");
+  return bits.slice(0, L).join("");
 }
 
 function compareBitStrings(a, b){
@@ -438,7 +458,7 @@ fileSetupForEncrypt.addEventListener("change", async () => {
 });
 
 document.getElementById("randMsgBtn").addEventListener("click", () => {
-  const rnd = gen512Bits();
+  const rnd = genBits(MSG_LEN);
   msgEl.value = rnd;
   lastPlaintextBits = rnd;
   lastPlaintextSource = "random";
@@ -473,7 +493,7 @@ btnEncrypt.addEventListener("click", async () => {
     prettyInto(outCT, {error:"Invalid message bits (must be only 0/1)."});
     return;
   }
-  if (msg.length > 0 && msg.length !== 512){
+  if (msg.length > 0 && msg.length !== MSG_LEN){
     setStatus("");
     setVerifyBadge("unknown", `Message must be exactly 512 bits (got ${msg.length}).`);
     prettyInto(outCT, {error:`Message must be exactly 512 bits (got ${msg.length}).`});
@@ -481,7 +501,8 @@ btnEncrypt.addEventListener("click", async () => {
   }
 
   if (msg.length === 0){
-    msg = gen512Bits();
+<!--    msg = gen512Bits();-->
+   msg = genBits(MSG_LEN)
     msgEl.value = msg;
     lastPlaintextSource = "random";
   } else {
@@ -652,49 +673,131 @@ fileSK.addEventListener("change", async () => {
   updateDecryptBtn();
 });
 
+<!--btnDecrypt.addEventListener("click", async () => {-->
+<!--  setStatus("Decrypting…");-->
+<!--  try{-->
+<!--    const res = await postJson("/api/decrypt", {-->
+<!--      ciphertext: ctForDecrypt,-->
+<!--      userkey: skForDecrypt-->
+<!--    });-->
+<!--    prettyInto(outDEC, res);-->
+<!--    setStatus("");-->
+
+<!--    // Refresh plaintext from localStorage (handles refresh/new tab)-->
+<!--    lastPlaintextBits = localStorage.getItem("lastPlaintextBits");-->
+<!--    lastPlaintextSource = localStorage.getItem("lastPlaintextSource");-->
+
+<!--    if (!lastPlaintextBits){-->
+<!--      setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser (or same machine) to verify.");-->
+<!--      return;-->
+<!--    }-->
+
+<!--    // Prefer full verification-->
+<!--    if (res && Array.isArray(res.phi_dec)){-->
+<!--      const decBits = res.phi_dec.join("");-->
+<!--      const cmp = compareBitStrings(lastPlaintextBits, decBits);-->
+<!--      if (cmp.equal) setVerifyBadge("ok", `Verified locally (full length=${decBits.length}).`);-->
+<!--      else setVerifyBadge("bad", cmp.reason);-->
+<!--      return;-->
+<!--    }-->
+
+<!--    // Fallback: verify first 128 only-->
+<!--    if (res && typeof res.phi_dec_first_128 === "string"){-->
+<!--      if (lastPlaintextBits.length < 128){-->
+<!--        setVerifyBadge("unknown", "Stored plaintext shorter than 128 bits; cannot verify.");-->
+<!--        return;-->
+<!--      }-->
+<!--      const cmp128 = compareBitStrings(lastPlaintextBits.slice(0,128), res.phi_dec_first_128);-->
+<!--      if (cmp128.equal) setVerifyBadge("ok", "Verified first 128 bits only (backend did not return full phi_dec).");-->
+<!--      else setVerifyBadge("bad", cmp128.reason + " (first 128)");-->
+<!--      return;-->
+<!--    }-->
+
+<!--    setVerifyBadge("unknown", "No phi_dec (or phi_dec_first_128) returned to verify.");-->
+
+<!--  }catch(e){-->
+<!--    prettyInto(outDEC, e);-->
+<!--    setStatus("Decrypt failed.");-->
+<!--    setVerifyBadge("unknown", "Decrypt failed; nothing to verify.");-->
+<!--  }-->
+
+<!--  // res = response from /api/decrypt-->
+<!--const stored = localStorage.getItem("lastPlaintextBits");-->
+<!--if (!stored) {-->
+<!--  setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser to verify.");-->
+<!--  return;-->
+<!--}-->
+
+<!--if (res && Array.isArray(res.phi_dec)) {-->
+<!--  const decBits = res.phi_dec.join("");-->
+<!--  const cmp = compareBitStrings(stored, decBits);-->
+<!--  if (cmp.equal) setVerifyBadge("ok", `Verified locally. Length=${decBits.length}.`);-->
+<!--  else setVerifyBadge("bad", cmp.reason);-->
+<!--  return;-->
+<!--}-->
+
+<!--if (res && typeof res.phi_dec_first_128 === "string") {-->
+<!--  // Treat as prefix, not 128-->
+<!--  const n = Math.min(stored.length, res.phi_dec_first_128.length);-->
+<!--  const cmpN = compareBitStrings(stored.slice(0, n), res.phi_dec_first_128.slice(0, n));-->
+<!--  if (cmpN.equal) setVerifyBadge("ok", `Verified first ${n} bits (prefix only).`);-->
+<!--  else setVerifyBadge("bad", cmpN.reason + ` (first ${n})`);-->
+<!--  return;-->
+<!--}-->
+
+<!--setVerifyBadge("unknown", "No phi_dec (or prefix) returned to verify.");-->
+
 btnDecrypt.addEventListener("click", async () => {
   setStatus("Decrypting…");
-  try{
+
+  try {
     const res = await postJson("/api/decrypt", {
       ciphertext: ctForDecrypt,
       userkey: skForDecrypt
     });
+
     prettyInto(outDEC, res);
     setStatus("");
 
-    // Refresh plaintext from localStorage (handles refresh/new tab)
-    lastPlaintextBits = localStorage.getItem("lastPlaintextBits");
-    lastPlaintextSource = localStorage.getItem("lastPlaintextSource");
+    // Load stored plaintext (survives refresh)
+    const stored = localStorage.getItem("lastPlaintextBits");
+    const storedSrc = localStorage.getItem("lastPlaintextSource");
 
-    if (!lastPlaintextBits){
-      setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser (or same machine) to verify.");
+    if (!stored) {
+      setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser to verify.");
       return;
     }
 
-    // Prefer full verification
-    if (res && Array.isArray(res.phi_dec)){
+    // Prefer full verification if backend returned full array
+    if (res && Array.isArray(res.phi_dec)) {
       const decBits = res.phi_dec.join("");
-      const cmp = compareBitStrings(lastPlaintextBits, decBits);
-      if (cmp.equal) setVerifyBadge("ok", `Verified locally (full length=${decBits.length}).`);
-      else setVerifyBadge("bad", cmp.reason);
-      return;
-    }
+      const cmp = compareBitStrings(stored, decBits);
 
-    // Fallback: verify first 128 only
-    if (res && typeof res.phi_dec_first_128 === "string"){
-      if (lastPlaintextBits.length < 128){
-        setVerifyBadge("unknown", "Stored plaintext shorter than 128 bits; cannot verify.");
-        return;
+      if (cmp.equal) {
+        setVerifyBadge("ok", `Verified locally. Length=${decBits.length}. (stored=${storedSrc || "unknown"})`);
+      } else {
+        setVerifyBadge("bad", cmp.reason);
       }
-      const cmp128 = compareBitStrings(lastPlaintextBits.slice(0,128), res.phi_dec_first_128);
-      if (cmp128.equal) setVerifyBadge("ok", "Verified first 128 bits only (backend did not return full phi_dec).");
-      else setVerifyBadge("bad", cmp128.reason + " (first 128)");
       return;
     }
 
-    setVerifyBadge("unknown", "No phi_dec (or phi_dec_first_128) returned to verify.");
+    // Fallback: backend returned only a prefix string (old name kept as phi_dec_first_128)
+    const prefix = (res && typeof res.phi_dec_first_128 === "string") ? res.phi_dec_first_128 : null;
+    if (prefix) {
+      const n = Math.min(stored.length, prefix.length);
+      const cmpN = compareBitStrings(stored.slice(0, n), prefix.slice(0, n));
 
-  }catch(e){
+      if (cmpN.equal) {
+        setVerifyBadge("ok", `Verified first ${n} bits (prefix only).`);
+      } else {
+        setVerifyBadge("bad", cmpN.reason + ` (first ${n})`);
+      }
+      return;
+    }
+
+    setVerifyBadge("unknown", "No phi_dec (or prefix) returned to verify.");
+
+  } catch (e) {
     prettyInto(outDEC, e);
     setStatus("Decrypt failed.");
     setVerifyBadge("unknown", "Decrypt failed; nothing to verify.");

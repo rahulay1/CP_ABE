@@ -7,7 +7,7 @@ import random
 N = 1
 
 # polynomial degree parameter: f = 2^v
-v = 9
+v = 5
 f = 1 << v  # 512
 
 # prime modulus (NTT-friendly)
