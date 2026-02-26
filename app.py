@@ -251,7 +251,7 @@ def decrypt_with_userkey(ct_bundle: dict, sk_bundle: dict) -> dict:
 def index():
     # Keep your existing index.html if you have it
     # If not, this will error; you can remove this route if you only want APIs.
-    return render_template("index.html", attr=attr)
+    return render_template("index.html", attr=attr,msg_len=f)
 
 
 # -----------------------------

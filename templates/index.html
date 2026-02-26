@@ -8,255 +8,391 @@
 </head>
 
 <body class="bg-gray-50 text-gray-900">
-  <div class="max-w-6xl mx-auto p-4 sm:p-6">
-    <header class="mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 class="text-2xl font-bold">CP-ABE / LSSS Demo — 4 Independent Components</h1>
-          <p class="text-sm text-gray-600 mt-1">
-            Setup (KGC+AA) → Data Owner Encrypt → User KeyGen → User Decrypt.
-          </p>
-        </div>
-        <div class="text-xs text-gray-500">
-          attr length: <span class="font-semibold">{{ attr }}</span> · message length: <span class="font-semibold">32</span>
-        </div>
+<div class="max-w-6xl mx-auto p-4 sm:p-6">
+  <header class="mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold">Quantum-secure Attribute-based Access Control Techniques</h1>
+        <p class="text-sm text-gray-600 mt-1">Setup → Encrypt → KeyGen → Decrypt</p>
       </div>
-
-      <div class="mt-4 flex flex-wrap items-center gap-3">
-        <div id="statusPill" class="text-sm text-gray-700"></div>
-
-        <div class="ml-auto flex items-center gap-2">
-          <span class="text-xs text-gray-500">Verification:</span>
-          <span id="verifyBadge"
-                class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-gray-100 text-gray-700">
-            No verification yet
-          </span>
-        </div>
+      <div class="text-xs text-gray-500">
+        attr length: <span class="font-semibold">{{ attr }}</span> · message length: <span class="font-semibold">{{ msg_len }}</span>
       </div>
-      <div id="verifyDetail" class="text-xs text-gray-500 mt-2"></div>
-    </header>
+    </div>
 
-    <!-- Tabs -->
-    <nav class="flex flex-wrap gap-2 mb-6">
-      <button class="tabBtn bg-black text-white rounded-lg px-4 py-2 font-semibold" data-tab="setup">1) Setup</button>
-      <button class="tabBtn bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" data-tab="encrypt">2) Encrypt</button>
-      <button class="tabBtn bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" data-tab="keygen">3) KeyGen</button>
-      <button class="tabBtn bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" data-tab="decrypt">4) Decrypt</button>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <div id="statusPill" class="text-sm text-gray-700"></div>
 
-      <button id="btnResetAll"
-              class="ml-auto bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
-        Reset
-      </button>
-    </nav>
-
-    <!-- Panels -->
-    <section id="panel-setup" class="panel bg-white rounded-xl shadow p-5">
-      <h2 class="text-lg font-bold mb-2">1) Setup (KGC + AA)</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        Generates a <span class="font-semibold">public_setup.json</span>. Authority secrets remain server-side (needed for KeyGen).
-      </p>
-
-      <div class="flex flex-wrap items-center gap-3">
-        <button id="btnSetup" class="bg-black text-white rounded-lg px-4 py-2 font-semibold">
-          Generate Setup
-        </button>
-        <button id="btnDownloadSetup" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" disabled>
-          Download public_setup.json
-        </button>
-
-        <span class="text-xs text-gray-500">
-          setup_id: <span id="setupIdBadge" class="font-mono">none</span>
+      <div class="ml-auto flex items-center gap-2">
+        <span class="text-xs text-gray-500">Verification:</span>
+        <span id="verifyBadge"
+              class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-gray-100 text-gray-700">
+          No verification yet
         </span>
       </div>
+    </div>
+    <div id="verifyDetail" class="text-xs text-gray-500 mt-2"></div>
+  </header>
 
-      <div class="mt-4">
-        <label class="block text-sm font-semibold mb-2">Public Setup JSON (preview)</label>
-        <pre id="outSetup" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-64"></pre>
+  <!-- Tabs -->
+  <nav class="flex flex-wrap gap-2 mb-6">
+    <button class="tabBtn bg-black text-white rounded-lg px-4 py-2 font-semibold" data-tab="setup">1) Setup</button>
+    <button class="tabBtn bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" data-tab="encrypt">2) Encrypt</button>
+    <button class="tabBtn bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" data-tab="keygen">3) KeyGen</button>
+    <button class="tabBtn bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" data-tab="decrypt">4) Decrypt</button>
+
+    <button id="btnResetAll" class="ml-auto bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
+      Reset UI
+    </button>
+  </nav>
+
+  <!-- Panels -->
+  <section id="panel-setup" class="panel bg-white rounded-xl shadow p-5">
+    <h2 class="text-lg font-bold mb-2">1) Setup (KGC + AA)</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      Generates <span class="font-semibold">public_setup.json</span>. Authority secrets stay server-side (needed for KeyGen).
+    </p>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="btnSetup" class="bg-black text-white rounded-lg px-4 py-2 font-semibold">
+        Generate Setup
+      </button>
+      <button id="btnDownloadSetup" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" disabled>
+        Download public_setup.json
+      </button>
+
+      <span class="text-xs text-gray-500">
+        setup_id: <span id="setupIdBadge" class="font-mono">none</span>
+      </span>
+    </div>
+
+    <div class="mt-4 border rounded-lg p-4 bg-gray-50">
+      <div class="text-sm font-semibold mb-1">Setup status</div>
+      <div id="setupNote" class="text-sm text-gray-700">Not generated yet.</div>
+    </div>
+
+    <!-- JSON Preview (bottom) -->
+    <div class="mt-5 border rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">Setup JSON (preview)</div>
+        <button type="button" id="copySetupPreview"
+                class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+          Copy
+        </button>
       </div>
-    </section>
+      <pre id="outSETUP" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-72"></pre>
+    </div>
+  </section>
 
-    <section id="panel-encrypt" class="panel bg-white rounded-xl shadow p-5 hidden">
-      <h2 class="text-lg font-bold mb-2">2) Data Owner — Encrypt</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        Upload <span class="font-semibold">public_setup.json</span>, set policy + message, produce <span class="font-semibold">ciphertext.json</span>.
-        Plaintext is stored locally for verification.
-      </p>
+  <section id="panel-encrypt" class="panel bg-white rounded-xl shadow p-5 hidden">
+    <h2 class="text-lg font-bold mb-2">2) Data Owner — Encrypt</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      Upload <span class="font-semibold">public_setup.json</span>, choose policy + message, then download
+      <span class="font-semibold">ciphertext.json</span>. Plaintext is stored locally for verification.
+    </p>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="border rounded-lg p-4">
-          <h3 class="font-semibold mb-3">Inputs</h3>
+    <div class="border rounded-lg p-4">
+      <h3 class="font-semibold mb-3">Inputs</h3>
 
-          <label class="block text-sm font-semibold mb-2">Upload public_setup.json</label>
-          <input type="file" id="fileSetupForEncrypt" accept="application/json" class="block w-full text-sm"/>
+      <label class="block text-sm font-semibold mb-2">Upload public_setup.json</label>
+      <input type="file" id="fileSetupForEncrypt" accept="application/json" class="block w-full text-sm"/>
 
-          <div class="mt-4">
-            <label class="block text-sm font-semibold mb-2">Policy</label>
-            <input id="policy" class="w-full border rounded-lg px-3 py-2"
-                   value="or(and(attr0,attr1), attr2)"/>
+      <!-- Policy -->
+      <div class="mt-5">
+        <label class="block text-sm font-semibold mb-2">Policy</label>
+
+        <!-- Generated / Custom on top -->
+ <div class="border rounded-lg p-3 bg-white">
+  <label class="block text-sm font-semibold mb-2">Generated Policy String (backend)</label>
+  <input id="policy" class="w-full border rounded-lg px-3 py-2 font-mono text-sm" readonly />
+
+  <!-- NEW: pretty display -->
+  <label class="block text-sm font-semibold mb-2 mt-3">Readable Policy (UI only)</label>
+  <input id="policyPretty"
+         class="w-full border rounded-lg px-3 py-2 font-mono text-sm bg-gray-100"
+         readonly />
+  <p class="text-xs text-gray-500 mt-2">
+    The backend still uses <span class="font-mono">attr0</span>, <span class="font-mono">attr1</span>, etc.
+    This line is just a label-mapped view.
+  </p>
+
+  <div class="mt-3">
+    <label class="block text-sm font-semibold mb-2">Custom Policy (optional)</label>
+    <input id="policyCustomText"
+           class="w-full border rounded-lg px-3 py-2 font-mono text-sm hidden"
+           placeholder='e.g. or(and(attr0,attr1), attr2)' />
+    <p class="text-xs text-gray-500 mt-2">
+      When using custom text, the builder won’t overwrite it until you reset.
+    </p>
+  </div>
+</div>
+
+
+
+        <!-- Builder bottom -->
+        <div class="border rounded-lg p-3 bg-gray-50 mt-4">
+          <label class="block text-sm font-semibold mb-2">Policy (Tree Builder)</label>
+          <div id="policyBuilder"></div>
+
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button type="button" id="btnResetPolicy"
+                    class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+              Reset
+            </button>
+            <button type="button" id="btnToCustomPolicy"
+                    class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+              Switch to Custom Text
+            </button>
           </div>
 
-          <div class="mt-4">
-            <label class="block text-sm font-semibold mb-2">Message bitstring (512 bits)</label>
-            <textarea id="messageBits" class="w-full border rounded-lg px-3 py-2 h-28 font-mono text-sm"
-                      placeholder="Leave empty to generate random 32-bit message"></textarea>
+          <p class="text-xs text-gray-500 mt-3">
+            Internal nodes are AND/OR. Leaves are attributes. This generates the policy string used by the backend.
+          </p>
+        </div>
+      </div>
 
-            <div class="flex flex-wrap items-center gap-3 mt-2">
-              <button type="button" id="randMsgBtn"
-                      class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
-                Random 32 bits
+      <!-- Message -->
+      <div class="mt-5">
+        <label class="block text-sm font-semibold mb-2">Message bitstring ({{ msg_len }} bits)</label>
+        <textarea id="messageBits"
+                  class="w-full border rounded-lg px-3 py-2 h-24 font-mono text-sm"
+                  placeholder="Leave empty to generate a random message"></textarea>
+
+        <div class="flex flex-wrap items-center gap-3 mt-2">
+          <button type="button" id="randMsgBtn"
+                  class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
+            Random {{ msg_len }} bits
+          </button>
+          <button type="button" id="clearMsgBtn"
+                  class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
+            Clear
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-2">
+          If left empty, the browser generates random bits before encrypting (so verification is possible).
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-5 flex flex-wrap items-center gap-3">
+        <button id="btnEncrypt" class="bg-black text-white rounded-lg px-4 py-2 font-semibold" disabled>
+          Encrypt
+        </button>
+        <button id="btnDownloadCT" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" disabled>
+          Download ciphertext.json
+        </button>
+      </div>
+
+      <div class="mt-4 border rounded-lg p-4 bg-gray-50">
+        <div class="text-sm font-semibold mb-1">Encrypt status</div>
+        <div id="encryptNote" class="text-sm text-gray-700">Waiting for inputs.</div>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-3">
+        Calls <code>/api/encrypt</code> with the uploaded public setup.
+      </p>
+    </div>
+
+    <!-- JSON Preview (bottom) -->
+    <div class="mt-5 border rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">Ciphertext JSON (preview)</div>
+        <button type="button" id="copyCTPreview"
+                class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+          Copy
+        </button>
+      </div>
+      <pre id="outCT" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-72"></pre>
+    </div>
+  </section>
+
+  <section id="panel-keygen" class="panel bg-white rounded-xl shadow p-5 hidden">
+    <h2 class="text-lg font-bold mb-2">3) User — KeyGen (precompute)</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      Select attributes → auto bitstring → generate <span class="font-semibold">userkey.json</span>.
+      Requires <span class="font-semibold">setup_id</span> because the server holds trapdoors.
+    </p>
+
+    <div class="border rounded-lg p-4">
+      <h3 class="font-semibold mb-3">Inputs</h3>
+
+      <label class="block text-sm font-semibold mb-2">setup_id</label>
+      <input id="setupIdForKeygen" class="w-full border rounded-lg px-3 py-2 font-mono text-sm"
+             placeholder="Paste setup_id from Setup tab"/>
+
+      <div class="mt-5">
+        <label class="block text-sm font-semibold mb-2">
+          Select user attributes (builds bitstring length={{ attr }})
+        </label>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="border rounded-lg p-3 bg-gray-50">
+            <input id="attrSearch" class="w-full border rounded-lg px-3 py-2 text-sm"
+                   placeholder="Search e.g. attr2"/>
+
+            <div class="flex items-center gap-2 mt-2">
+              <button type="button" id="selectAllAttrsBtn"
+                      class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+                Select all
               </button>
-              <button type="button" id="clearMsgBtn"
-                      class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold">
+              <button type="button" id="clearAttrsBtn"
+                      class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
                 Clear
               </button>
+              <span id="attrCount" class="text-xs text-gray-500 ml-auto"></span>
             </div>
+
+            <div id="attrList" class="h-56 overflow-auto border rounded-lg p-2 bg-white mt-3"></div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold mb-2">User attribute bitstring</label>
+            <input id="userBits"
+                   class="w-full border rounded-lg px-3 py-2 font-mono text-sm bg-gray-100"
+                   readonly/>
 
             <p class="text-xs text-gray-500 mt-2">
-              If left empty, the browser will generate random bits before encrypting (so verification is possible).
+              Bit i corresponds to attr{i}. Sent to <code>/api/keygen</code>.
             </p>
-          </div>
 
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button id="btnEncrypt" class="bg-black text-white rounded-lg px-4 py-2 font-semibold" disabled>
-              Encrypt
-            </button>
-            <button id="btnDownloadCT" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" disabled>
-              Download ciphertext.json
-            </button>
-          </div>
-
-          <p class="text-xs text-gray-500 mt-3">
-            Calls <code>/api/encrypt</code> with the uploaded public_setup bundle.
-          </p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold mb-2">Ciphertext JSON (preview)</label>
-          <pre id="outCT" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-[32rem]"></pre>
-        </div>
-      </div>
-    </section>
-
-    <section id="panel-keygen" class="panel bg-white rounded-xl shadow p-5 hidden">
-      <h2 class="text-lg font-bold mb-2">3) User — KeyGen (precompute)</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        Select attributes → auto bitstring → generate <span class="font-semibold">userkey.json</span>.
-        Requires <span class="font-semibold">setup_id</span> because server holds trapdoors.
-      </p>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="border rounded-lg p-4">
-          <h3 class="font-semibold mb-3">Inputs</h3>
-
-          <label class="block text-sm font-semibold mb-2">setup_id</label>
-          <input id="setupIdForKeygen" class="w-full border rounded-lg px-3 py-2 font-mono text-sm"
-                 placeholder="Paste setup_id from Setup tab"/>
-
-          <div class="mt-4">
-            <label class="block text-sm font-semibold mb-2">
-              Select user attributes (builds bitstring length={{ attr }})
-            </label>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="border rounded-lg p-3">
-                <input id="attrSearch" class="w-full border rounded-lg px-3 py-2 text-sm"
-                       placeholder="Search e.g. attr2"/>
-
-                <div class="flex items-center gap-2 mt-2">
-                  <button type="button" id="selectAllAttrsBtn"
-                          class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
-                    Select all
-                  </button>
-                  <button type="button" id="clearAttrsBtn"
-                          class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
-                    Clear
-                  </button>
-                  <span id="attrCount" class="text-xs text-gray-500 ml-auto"></span>
-                </div>
-
-                <div id="attrList" class="h-56 overflow-auto border rounded-lg p-2 bg-gray-50 mt-3"></div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold mb-2">User attribute bitstring</label>
-                <input id="userBits"
-                       class="w-full border rounded-lg px-3 py-2 font-mono text-sm bg-gray-100"
-                       readonly/>
-
-                <p class="text-xs text-gray-500 mt-2">
-                  Bit i corresponds to attr{i}. This is sent to <code>/api/keygen</code>.
-                </p>
-
-                <div class="mt-4 flex flex-wrap items-center gap-3">
-                  <button id="btnKeygen" class="bg-black text-white rounded-lg px-4 py-2 font-semibold">
-                    Generate User Key
-                  </button>
-                  <button id="btnDownloadSK" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" disabled>
-                    Download userkey.json
-                  </button>
-                </div>
-              </div>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <button id="btnKeygen" class="bg-black text-white rounded-lg px-4 py-2 font-semibold">
+                Generate User Key
+              </button>
+              <button id="btnDownloadSK" class="bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 font-semibold" disabled>
+                Download userkey.json
+              </button>
             </div>
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold mb-2">User Key JSON (preview)</label>
-          <pre id="outSK" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-[32rem]"></pre>
+        <div class="mt-4 border rounded-lg p-4 bg-gray-50">
+          <div class="text-sm font-semibold mb-1">KeyGen status</div>
+          <div id="keygenNote" class="text-sm text-gray-700">Waiting for inputs.</div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section id="panel-decrypt" class="panel bg-white rounded-xl shadow p-5 hidden">
-      <h2 class="text-lg font-bold mb-2">4) User — Decrypt</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        Upload <span class="font-semibold">ciphertext.json</span> and <span class="font-semibold">userkey.json</span>, then decrypt.
-        Verification compares decrypted bits to locally stored plaintext (from Encrypt step).
+    <!-- JSON Preview (bottom) -->
+    <div class="mt-5 border rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">User Key JSON (preview)</div>
+        <button type="button" id="copySKPreview"
+                class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+          Copy
+        </button>
+      </div>
+      <pre id="outSK" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-72"></pre>
+    </div>
+  </section>
+
+  <section id="panel-decrypt" class="panel bg-white rounded-xl shadow p-5 hidden">
+    <h2 class="text-lg font-bold mb-2">4) User — Decrypt</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      Upload <span class="font-semibold">ciphertext.json</span> and <span class="font-semibold">userkey.json</span>, then decrypt.
+      Verification compares decrypted bits to stored plaintext from Encrypt.
+    </p>
+
+    <div class="border rounded-lg p-4">
+      <h3 class="font-semibold mb-3">Inputs</h3>
+
+      <label class="block text-sm font-semibold mb-2">Upload ciphertext.json</label>
+      <input type="file" id="fileCT" accept="application/json" class="block w-full text-sm"/>
+
+      <label class="block text-sm font-semibold mb-2 mt-4">Upload userkey.json</label>
+      <input type="file" id="fileSK" accept="application/json" class="block w-full text-sm"/>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <button id="btnDecrypt" class="bg-black text-white rounded-lg px-4 py-2 font-semibold" disabled>
+          Decrypt
+        </button>
+      </div>
+
+      <div class="mt-4 border rounded-lg p-4 bg-gray-50">
+        <div class="text-sm font-semibold mb-1">Decrypt status</div>
+        <div id="decryptNote" class="text-sm text-gray-700">Waiting for inputs.</div>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-3">
+        Calls <code>/api/decrypt</code> with both JSON objects.
       </p>
+    </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="border rounded-lg p-4">
-          <h3 class="font-semibold mb-3">Inputs</h3>
-
-          <label class="block text-sm font-semibold mb-2">Upload ciphertext.json</label>
-          <input type="file" id="fileCT" accept="application/json" class="block w-full text-sm"/>
-
-          <label class="block text-sm font-semibold mb-2 mt-4">Upload userkey.json</label>
-          <input type="file" id="fileSK" accept="application/json" class="block w-full text-sm"/>
-
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button id="btnDecrypt" class="bg-black text-white rounded-lg px-4 py-2 font-semibold" disabled>
-              Decrypt
-            </button>
-          </div>
-
-          <p class="text-xs text-gray-500 mt-3">
-            Calls <code>/api/decrypt</code> with both JSON objects.
-          </p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold mb-2">Decryption Result (preview)</label>
-          <pre id="outDEC" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-[32rem]"></pre>
-        </div>
+    <!-- JSON Preview (bottom) -->
+    <div class="mt-5 border rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">Decryption JSON (preview)</div>
+        <button type="button" id="copyDECPreview"
+                class="bg-gray-200 hover:bg-gray-300 rounded-lg px-3 py-2 font-semibold text-sm">
+          Copy
+        </button>
       </div>
-    </section>
-  </div>
+      <pre id="outDEC" class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto h-72"></pre>
+    </div>
+  </section>
+</div>
 
 <script>
 /* ---------------------------
+   Constants (from backend)
+---------------------------- */
+const ATTR_N = Number("{{ attr }}");
+const MSG_LEN = Number("{{ msg_len }}");
+
+const ATTR_META = [
+  { idx: 0,  key: "role_attending",    label: "Role: Attending Physician", group: "role", single: true },
+  { idx: 1,  key: "role_resident",     label: "Role: Resident Physician",  group: "role", single: true },
+  { idx: 2,  key: "role_nurse",        label: "Role: Nurse",              group: "role", single: true },
+  { idx: 3,  key: "role_pharmacist",   label: "Role: Pharmacist",         group: "role", single: true },
+  { idx: 4,  key: "role_labtech",      label: "Role: Lab Technician",     group: "role", single: true },
+  { idx: 5,  key: "role_radiologist",  label: "Role: Radiologist",        group: "role", single: true },
+  { idx: 6,  key: "role_billing",      label: "Role: Billing Staff",      group: "role", single: true },
+  { idx: 7,  key: "role_researcher",   label: "Role: Researcher",         group: "role", single: true },
+  { idx: 8,  key: "role_privacy",      label: "Role: Privacy/Compliance", group: "role", single: true },
+  { idx: 9,  key: "role_itadmin",      label: "Role: IT Administrator",   group: "role", single: true },
+
+  { idx: 10, key: "dept_ed",           label: "Dept: Emergency (ED)",      group: "dept", single: true },
+  { idx: 11, key: "dept_icu",          label: "Dept: ICU",                group: "dept", single: true },
+  { idx: 12, key: "dept_oncology",     label: "Dept: Oncology",           group: "dept", single: true },
+  { idx: 13, key: "dept_peds",         label: "Dept: Pediatrics",         group: "dept", single: true },
+  { idx: 14, key: "dept_surgery",      label: "Dept: Surgery",            group: "dept", single: true },
+  { idx: 15, key: "dept_cardiology",   label: "Dept: Cardiology",         group: "dept", single: true },
+
+  { idx: 16, key: "data_demo",         label: "Data: Demographics",       group: "data", single: false },
+  { idx: 17, key: "data_notes",        label: "Data: Clinical Notes",     group: "data", single: false },
+  { idx: 18, key: "data_meds",         label: "Data: Medications",        group: "data", single: false },
+  { idx: 19, key: "data_labs",         label: "Data: Lab Results",        group: "data", single: false },
+  { idx: 20, key: "data_imaging",      label: "Data: Imaging Reports",    group: "data", single: false },
+  { idx: 21, key: "data_mh",           label: "Data: Mental Health Notes",group: "data", single: false },
+  { idx: 22, key: "data_hiv",          label: "Data: HIV/Sexual Health",  group: "data", single: false },
+  { idx: 23, key: "data_billing",      label: "Data: Billing/Insurance",  group: "data", single: false },
+
+  { idx: 24, key: "purpose_treat",     label: "Purpose: Treatment",       group: "purpose", single: true },
+  { idx: 25, key: "purpose_ops",       label: "Purpose: Operations",      group: "purpose", single: true },
+  { idx: 26, key: "purpose_bill",      label: "Purpose: Billing",         group: "purpose", single: true },
+  { idx: 27, key: "purpose_research",  label: "Purpose: Research",        group: "purpose", single: true },
+
+  { idx: 28, key: "consent_granted",   label: "Consent: Granted",         group: "consent", single: false },
+  { idx: 29, key: "irb_approved",      label: "IRB Approved",             group: "research_gate", single: false },
+  { idx: 30, key: "deidentified_only", label: "De-identified Only",       group: "research_gate", single: false },
+  { idx: 31, key: "break_glass",       label: "Break-glass Emergency",    group: "emergency", single: false },
+
+  { idx: 32, key: "managed_device",    label: "On-prem / Managed Device", group: "context", single: false },
+];
+
+// quick lookup
+const ATTR_BY_IDX = Object.fromEntries(ATTR_META.map(a => [a.idx, a]));
+
+/* ---------------------------
    Utilities
 ---------------------------- */
-const MSG_LEN = 32;
-const rnd = genBits(MSG_LEN);
-
 const statusPill = document.getElementById("statusPill");
-function setStatus(msg){
-  statusPill.textContent = msg || "";
-}
+function setStatus(msg){ statusPill.textContent = msg || ""; }
 
 function prettyInto(preEl, obj){
-  preEl.textContent = obj ? JSON.stringify(obj, null, 2) : "";
+  if (!preEl) return;
+  preEl.textContent = (typeof obj === "string") ? obj : JSON.stringify(obj, null, 2);
 }
 
 async function postJson(url, payload){
@@ -289,34 +425,18 @@ function downloadJson(obj, filename){
   URL.revokeObjectURL(url);
 }
 
-<!--function gen512Bits(){-->
-<!--  const bits = [];-->
-<!--  if (window.crypto && crypto.getRandomValues){-->
-<!--    const bytes = new Uint8Array(64); // 512 bits-->
-<!--    crypto.getRandomValues(bytes);-->
-<!--    for (let i=0;i<bytes.length;i++){-->
-<!--      const b = bytes[i];-->
-<!--      for (let k=7;k>=0;k&#45;&#45;) bits.push((b>>k)&1);-->
-<!--    }-->
-<!--  } else {-->
-<!--    for (let i=0;i<512;i++) bits.push(Math.random()<0.5 ? 0 : 1);-->
-<!--  }-->
-<!--  return bits.join("");-->
-<!--}-->
-
 function genBits(L){
   const bits = [];
   const nBytes = Math.ceil(L / 8);
-
   if (window.crypto && crypto.getRandomValues){
     const bytes = new Uint8Array(nBytes);
     crypto.getRandomValues(bytes);
-    for (let i = 0; i < bytes.length; i++){
+    for (let i=0;i<bytes.length;i++){
       const b = bytes[i];
-      for (let k = 7; k >= 0; k--) bits.push((b >> k) & 1);
+      for (let k=7;k>=0;k--) bits.push((b>>k)&1);
     }
   } else {
-    for (let i = 0; i < nBytes * 8; i++) bits.push(Math.random() < 0.5 ? 0 : 1);
+    for (let i=0;i<nBytes*8;i++) bits.push(Math.random()<0.5 ? 0 : 1);
   }
   return bits.slice(0, L).join("");
 }
@@ -331,16 +451,34 @@ function compareBitStrings(a, b){
 }
 
 /* ---------------------------
-   Verification state (local + persisted)
+   Copy buttons
 ---------------------------- */
-let lastPlaintextBits = null;
-let lastPlaintextSource = null;
+function wireCopy(btnId, preId){
+  const btn = document.getElementById(btnId);
+  const pre = document.getElementById(preId);
+  if (!btn || !pre) return;
+  btn.addEventListener("click", async () => {
+    try{
+      await navigator.clipboard.writeText(pre.textContent || "");
+      setStatus("Copied.");
+      setTimeout(() => setStatus(""), 700);
+    }catch(e){
+      setStatus("Copy failed.");
+    }
+  });
+}
+wireCopy("copySetupPreview","outSETUP");
+wireCopy("copyCTPreview","outCT");
+wireCopy("copySKPreview","outSK");
+wireCopy("copyDECPreview","outDEC");
 
+/* ---------------------------
+   Verification badge
+---------------------------- */
 const verifyBadge = document.getElementById("verifyBadge");
 const verifyDetail = document.getElementById("verifyDetail");
 
 function setVerifyBadge(state, detail){
-  // state: none|ok|bad|unknown
   if (state === "ok"){
     verifyBadge.className = "inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-green-100 text-green-800";
     verifyBadge.textContent = "✔ Decryption matches plaintext";
@@ -357,9 +495,9 @@ function setVerifyBadge(state, detail){
   verifyDetail.textContent = detail || "";
 }
 
-// Restore from localStorage AFTER setVerifyBadge exists
-lastPlaintextBits = localStorage.getItem("lastPlaintextBits");
-lastPlaintextSource = localStorage.getItem("lastPlaintextSource");
+// restore across refresh
+let lastPlaintextBits = localStorage.getItem("plain_bits");
+let lastPlaintextSource = localStorage.getItem("plain_src");
 if (lastPlaintextBits){
   setVerifyBadge("none", `Plaintext restored (${lastPlaintextSource || "saved"}).`);
 }
@@ -373,7 +511,6 @@ const panels = {
   keygen: document.getElementById("panel-keygen"),
   decrypt: document.getElementById("panel-decrypt"),
 };
-
 function showTab(name){
   Object.entries(panels).forEach(([k, el]) => el.classList.toggle("hidden", k !== name));
   document.querySelectorAll(".tabBtn").forEach(btn => {
@@ -384,42 +521,40 @@ function showTab(name){
   });
   setStatus("");
 }
-
 document.querySelectorAll(".tabBtn").forEach(btn => btn.addEventListener("click", () => showTab(btn.dataset.tab)));
-
-/* ---------------------------
-   Reset
----------------------------- */
 document.getElementById("btnResetAll").addEventListener("click", () => {
-  // UI state
   setStatus("");
   setVerifyBadge("none", "");
-  // keep plaintext unless you REALLY want to wipe it:
-  // localStorage.removeItem("lastPlaintextBits"); localStorage.removeItem("lastPlaintextSource");
-  // lastPlaintextBits = null; lastPlaintextSource = null;
 });
 
 /* ---------------------------
-   1) Setup
+   Setup
 ---------------------------- */
 let publicSetup = null;
 const btnSetup = document.getElementById("btnSetup");
 const btnDownloadSetup = document.getElementById("btnDownloadSetup");
-const outSetup = document.getElementById("outSetup");
 const setupIdBadge = document.getElementById("setupIdBadge");
 const setupIdForKeygen = document.getElementById("setupIdForKeygen");
+const setupNote = document.getElementById("setupNote");
+const outSETUP = document.getElementById("outSETUP");
+
+prettyInto(outSETUP, {info: "Setup preview will appear here."});
 
 btnSetup.addEventListener("click", async () => {
   setStatus("Running setup…");
+  setupNote.textContent = "Working…";
+  prettyInto(outSETUP, {info:"running /api/setup"});
   try{
     publicSetup = await postJson("/api/setup", {});
-    prettyInto(outSetup, publicSetup);
     btnDownloadSetup.disabled = false;
     setupIdBadge.textContent = publicSetup.setup_id || "none";
     setupIdForKeygen.value = publicSetup.setup_id || "";
+    setupNote.textContent = `Setup generated. setup_id=${publicSetup.setup_id || "none"}`;
+    prettyInto(outSETUP, publicSetup);
     setStatus("");
   }catch(e){
-    prettyInto(outSetup, e);
+    setupNote.textContent = `Setup failed: ${e.error || JSON.stringify(e)}`;
+    prettyInto(outSETUP, e);
     setStatus("Setup failed.");
   }
 });
@@ -430,7 +565,7 @@ btnDownloadSetup.addEventListener("click", () => {
 });
 
 /* ---------------------------
-   2) Encrypt
+   Encrypt
 ---------------------------- */
 let setupForEncrypt = null;
 let ciphertext = null;
@@ -438,21 +573,27 @@ let ciphertext = null;
 const fileSetupForEncrypt = document.getElementById("fileSetupForEncrypt");
 const btnEncrypt = document.getElementById("btnEncrypt");
 const btnDownloadCT = document.getElementById("btnDownloadCT");
-const outCT = document.getElementById("outCT");
+const encryptNote = document.getElementById("encryptNote");
 const msgEl = document.getElementById("messageBits");
+const outCT = document.getElementById("outCT");
+
+prettyInto(outCT, {info: "Ciphertext preview will appear here after Encrypt."});
 
 fileSetupForEncrypt.addEventListener("change", async () => {
   ciphertext = null;
   btnDownloadCT.disabled = true;
-
+  encryptNote.textContent = "Loading public_setup.json…";
+  prettyInto(outCT, {info:"loading public_setup.json"});
   try{
     setupForEncrypt = await readJsonFile(fileSetupForEncrypt);
     if (!setupForEncrypt) throw new Error("No file selected.");
     btnEncrypt.disabled = false;
-    prettyInto(outCT, {info:"public_setup loaded", setup_id: setupForEncrypt.setup_id || null});
+    encryptNote.textContent = `public_setup loaded (setup_id=${setupForEncrypt.setup_id || "none"}).`;
+    prettyInto(outCT, {ok:true, info:"public_setup loaded", setup_id: setupForEncrypt.setup_id || null});
   }catch(e){
     setupForEncrypt = null;
     btnEncrypt.disabled = true;
+    encryptNote.textContent = `Failed to load public_setup.json: ${String(e)}`;
     prettyInto(outCT, {error:"Failed to load public_setup.json", details:String(e)});
   }
 });
@@ -460,58 +601,67 @@ fileSetupForEncrypt.addEventListener("change", async () => {
 document.getElementById("randMsgBtn").addEventListener("click", () => {
   const rnd = genBits(MSG_LEN);
   msgEl.value = rnd;
+
+  localStorage.setItem("plain_bits", rnd);
+  localStorage.setItem("plain_src", "random");
   lastPlaintextBits = rnd;
   lastPlaintextSource = "random";
-  localStorage.setItem("lastPlaintextBits", lastPlaintextBits);
-  localStorage.setItem("lastPlaintextSource", lastPlaintextSource);
   setVerifyBadge("none", "Plaintext stored (random).");
 });
 
 document.getElementById("clearMsgBtn").addEventListener("click", () => {
   msgEl.value = "";
-  // do NOT wipe stored plaintext here; user might decrypt older CT
   setVerifyBadge("none", "Message cleared. Encrypt will generate random plaintext if left empty.");
 });
 
 btnEncrypt.addEventListener("click", async () => {
   if (!setupForEncrypt){
-    prettyInto(outCT, {error:"Upload public_setup.json first."});
+    encryptNote.textContent = "Upload public_setup.json first.";
+    prettyInto(outCT, {error:"missing public_setup.json"});
     return;
   }
 
   setStatus("Encrypting…");
+  encryptNote.textContent = "Encrypting…";
   ciphertext = null;
   btnDownloadCT.disabled = true;
 
-  const policy = document.getElementById("policy").value;
+  const policy = (document.getElementById("policy").value || "").trim();
+  if (!policy){
+    setStatus("");
+    encryptNote.textContent = "Policy is required.";
+    prettyInto(outCT, {error:"policy required"});
+    return;
+  }
 
-  // Ensure plaintext exists client-side so verification is possible
   let msg = (msgEl.value || "").replace(/\s+/g, "");
   if (msg.length > 0 && !/^[01]+$/.test(msg)){
     setStatus("");
     setVerifyBadge("unknown", "Message must be only 0/1 (or leave empty for random).");
-    prettyInto(outCT, {error:"Invalid message bits (must be only 0/1)."});
+    encryptNote.textContent = "Invalid message bits (must be only 0/1).";
+    prettyInto(outCT, {error:"invalid message bits (only 0/1)"});
     return;
   }
   if (msg.length > 0 && msg.length !== MSG_LEN){
     setStatus("");
-    setVerifyBadge("unknown", `Message must be exactly 512 bits (got ${msg.length}).`);
-    prettyInto(outCT, {error:`Message must be exactly 512 bits (got ${msg.length}).`});
+    setVerifyBadge("unknown", `Message must be exactly ${MSG_LEN} bits (got ${msg.length}).`);
+    encryptNote.textContent = `Message must be exactly ${MSG_LEN} bits (got ${msg.length}).`;
+    prettyInto(outCT, {error:`expected ${MSG_LEN} bits`, got: msg.length});
     return;
   }
 
   if (msg.length === 0){
-<!--    msg = gen512Bits();-->
-   msg = genBits(MSG_LEN)
+    msg = genBits(MSG_LEN);
     msgEl.value = msg;
+    localStorage.setItem("plain_src", "random");
     lastPlaintextSource = "random";
   } else {
+    localStorage.setItem("plain_src", "typed");
     lastPlaintextSource = "typed";
   }
 
+  localStorage.setItem("plain_bits", msg);
   lastPlaintextBits = msg;
-  localStorage.setItem("lastPlaintextBits", lastPlaintextBits);
-  localStorage.setItem("lastPlaintextSource", lastPlaintextSource);
   setVerifyBadge("none", `Plaintext stored (${lastPlaintextSource}).`);
 
   try{
@@ -520,10 +670,12 @@ btnEncrypt.addEventListener("click", async () => {
       policy: policy,
       message_bits: msg
     });
-    prettyInto(outCT, ciphertext);
     btnDownloadCT.disabled = false;
+    encryptNote.textContent = "Encryption done. Download ciphertext.json.";
+    prettyInto(outCT, ciphertext);
     setStatus("");
   }catch(e){
+    encryptNote.textContent = `Encrypt failed: ${e.error || JSON.stringify(e)}`;
     prettyInto(outCT, e);
     setStatus("Encrypt failed.");
     setVerifyBadge("unknown", "Encrypt failed; cannot verify.");
@@ -533,21 +685,23 @@ btnEncrypt.addEventListener("click", async () => {
 btnDownloadCT.addEventListener("click", () => {
   if (!ciphertext) return;
   downloadJson(ciphertext, "ciphertext.json");
+  encryptNote.textContent = "ciphertext.json downloaded.";
 });
 
 /* ---------------------------
-   3) KeyGen
+   KeyGen
 ---------------------------- */
-const ATTR_N = Number("{{ attr }}");
 const attrListEl = document.getElementById("attrList");
 const attrSearchEl = document.getElementById("attrSearch");
 const userBitsEl = document.getElementById("userBits");
 const attrCountEl = document.getElementById("attrCount");
 const btnKeygen = document.getElementById("btnKeygen");
 const btnDownloadSK = document.getElementById("btnDownloadSK");
+const keygenNote = document.getElementById("keygenNote");
 const outSK = document.getElementById("outSK");
 
 let userKey = null;
+prettyInto(outSK, {info: "User key preview will appear here after KeyGen."});
 
 function renderAttrList(filterText=""){
   const f = (filterText || "").toLowerCase();
@@ -557,7 +711,7 @@ function renderAttrList(filterText=""){
     if (f && !name.toLowerCase().includes(f)) continue;
 
     const row = document.createElement("label");
-    row.className = "flex items-center gap-2 px-2 py-1 rounded hover:bg-white cursor-pointer";
+    row.className = "flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer";
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
@@ -566,8 +720,9 @@ function renderAttrList(filterText=""){
 
     const txt = document.createElement("span");
     txt.className = "text-sm font-mono";
-    txt.textContent = name;
-
+<!--    txt.textContent = name;-->
+    const meta = ATTR_BY_IDX[i] || { label: `attr${i}` };
+    txt.textContent = meta.label;
     row.appendChild(cb);
     row.appendChild(txt);
     attrListEl.appendChild(row);
@@ -610,22 +765,27 @@ userBitsEl.value = "0".repeat(ATTR_N);
 attrCountEl.textContent = "0 selected";
 
 btnKeygen.addEventListener("click", async () => {
-  const setupId = setupIdForKeygen.value.trim();
+  const setupId = (setupIdForKeygen.value || "").trim();
   if (!setupId){
-    prettyInto(outSK, {error:"setup_id is required (run Setup first)."});
+    keygenNote.textContent = "setup_id is required (run Setup first).";
+    prettyInto(outSK, {error:"missing setup_id"});
     return;
   }
 
   setStatus("KeyGen…");
+  keygenNote.textContent = "KeyGen running…";
+  prettyInto(outSK, {info:"running /api/keygen", setup_id: setupId, user_bits: userBitsEl.value});
   try{
     userKey = await postJson("/api/keygen", {
       setup_id: setupId,
       user_bits: userBitsEl.value
     });
-    prettyInto(outSK, userKey);
     btnDownloadSK.disabled = false;
+    keygenNote.textContent = "User key generated. Download userkey.json.";
+    prettyInto(outSK, userKey);
     setStatus("");
   }catch(e){
+    keygenNote.textContent = `KeyGen failed: ${e.error || JSON.stringify(e)}`;
     prettyInto(outSK, e);
     setStatus("KeyGen failed.");
   }
@@ -634,10 +794,11 @@ btnKeygen.addEventListener("click", async () => {
 btnDownloadSK.addEventListener("click", () => {
   if (!userKey) return;
   downloadJson(userKey, "userkey.json");
+  keygenNote.textContent = "userkey.json downloaded.";
 });
 
 /* ---------------------------
-   4) Decrypt + Verify
+   Decrypt
 ---------------------------- */
 let ctForDecrypt = null;
 let skForDecrypt = null;
@@ -645,164 +806,286 @@ let skForDecrypt = null;
 const fileCT = document.getElementById("fileCT");
 const fileSK = document.getElementById("fileSK");
 const btnDecrypt = document.getElementById("btnDecrypt");
+const decryptNote = document.getElementById("decryptNote");
 const outDEC = document.getElementById("outDEC");
+
+prettyInto(outDEC, {info: "Decryption preview will appear here after Decrypt."});
 
 function updateDecryptBtn(){
   btnDecrypt.disabled = !(ctForDecrypt && skForDecrypt);
 }
 
 fileCT.addEventListener("change", async () => {
+  decryptNote.textContent = "Loading ciphertext.json…";
   try{
     ctForDecrypt = await readJsonFile(fileCT);
-    prettyInto(outDEC, {info:"ciphertext loaded"});
+    decryptNote.textContent = "ciphertext.json loaded.";
+    prettyInto(outDEC, {ok:true, info:"ciphertext loaded"});
   }catch(e){
     ctForDecrypt = null;
+    decryptNote.textContent = `Failed to read ciphertext.json: ${String(e)}`;
     prettyInto(outDEC, {error:"Failed to read ciphertext.json", details:String(e)});
   }
   updateDecryptBtn();
 });
 
 fileSK.addEventListener("change", async () => {
+  decryptNote.textContent = "Loading userkey.json…";
   try{
     skForDecrypt = await readJsonFile(fileSK);
-    prettyInto(outDEC, {info:"userkey loaded"});
+    decryptNote.textContent = "userkey.json loaded.";
+    prettyInto(outDEC, {ok:true, info:"userkey loaded"});
   }catch(e){
     skForDecrypt = null;
+    decryptNote.textContent = `Failed to read userkey.json: ${String(e)}`;
     prettyInto(outDEC, {error:"Failed to read userkey.json", details:String(e)});
   }
   updateDecryptBtn();
 });
 
-<!--btnDecrypt.addEventListener("click", async () => {-->
-<!--  setStatus("Decrypting…");-->
-<!--  try{-->
-<!--    const res = await postJson("/api/decrypt", {-->
-<!--      ciphertext: ctForDecrypt,-->
-<!--      userkey: skForDecrypt-->
-<!--    });-->
-<!--    prettyInto(outDEC, res);-->
-<!--    setStatus("");-->
-
-<!--    // Refresh plaintext from localStorage (handles refresh/new tab)-->
-<!--    lastPlaintextBits = localStorage.getItem("lastPlaintextBits");-->
-<!--    lastPlaintextSource = localStorage.getItem("lastPlaintextSource");-->
-
-<!--    if (!lastPlaintextBits){-->
-<!--      setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser (or same machine) to verify.");-->
-<!--      return;-->
-<!--    }-->
-
-<!--    // Prefer full verification-->
-<!--    if (res && Array.isArray(res.phi_dec)){-->
-<!--      const decBits = res.phi_dec.join("");-->
-<!--      const cmp = compareBitStrings(lastPlaintextBits, decBits);-->
-<!--      if (cmp.equal) setVerifyBadge("ok", `Verified locally (full length=${decBits.length}).`);-->
-<!--      else setVerifyBadge("bad", cmp.reason);-->
-<!--      return;-->
-<!--    }-->
-
-<!--    // Fallback: verify first 128 only-->
-<!--    if (res && typeof res.phi_dec_first_128 === "string"){-->
-<!--      if (lastPlaintextBits.length < 128){-->
-<!--        setVerifyBadge("unknown", "Stored plaintext shorter than 128 bits; cannot verify.");-->
-<!--        return;-->
-<!--      }-->
-<!--      const cmp128 = compareBitStrings(lastPlaintextBits.slice(0,128), res.phi_dec_first_128);-->
-<!--      if (cmp128.equal) setVerifyBadge("ok", "Verified first 128 bits only (backend did not return full phi_dec).");-->
-<!--      else setVerifyBadge("bad", cmp128.reason + " (first 128)");-->
-<!--      return;-->
-<!--    }-->
-
-<!--    setVerifyBadge("unknown", "No phi_dec (or phi_dec_first_128) returned to verify.");-->
-
-<!--  }catch(e){-->
-<!--    prettyInto(outDEC, e);-->
-<!--    setStatus("Decrypt failed.");-->
-<!--    setVerifyBadge("unknown", "Decrypt failed; nothing to verify.");-->
-<!--  }-->
-
-<!--  // res = response from /api/decrypt-->
-<!--const stored = localStorage.getItem("lastPlaintextBits");-->
-<!--if (!stored) {-->
-<!--  setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser to verify.");-->
-<!--  return;-->
-<!--}-->
-
-<!--if (res && Array.isArray(res.phi_dec)) {-->
-<!--  const decBits = res.phi_dec.join("");-->
-<!--  const cmp = compareBitStrings(stored, decBits);-->
-<!--  if (cmp.equal) setVerifyBadge("ok", `Verified locally. Length=${decBits.length}.`);-->
-<!--  else setVerifyBadge("bad", cmp.reason);-->
-<!--  return;-->
-<!--}-->
-
-<!--if (res && typeof res.phi_dec_first_128 === "string") {-->
-<!--  // Treat as prefix, not 128-->
-<!--  const n = Math.min(stored.length, res.phi_dec_first_128.length);-->
-<!--  const cmpN = compareBitStrings(stored.slice(0, n), res.phi_dec_first_128.slice(0, n));-->
-<!--  if (cmpN.equal) setVerifyBadge("ok", `Verified first ${n} bits (prefix only).`);-->
-<!--  else setVerifyBadge("bad", cmpN.reason + ` (first ${n})`);-->
-<!--  return;-->
-<!--}-->
-
-<!--setVerifyBadge("unknown", "No phi_dec (or prefix) returned to verify.");-->
-
 btnDecrypt.addEventListener("click", async () => {
   setStatus("Decrypting…");
-
-  try {
+  decryptNote.textContent = "Decrypting…";
+  prettyInto(outDEC, {info:"running /api/decrypt"});
+  try{
     const res = await postJson("/api/decrypt", {
       ciphertext: ctForDecrypt,
       userkey: skForDecrypt
     });
-
     prettyInto(outDEC, res);
-    setStatus("");
 
-    // Load stored plaintext (survives refresh)
-    const stored = localStorage.getItem("lastPlaintextBits");
-    const storedSrc = localStorage.getItem("lastPlaintextSource");
+    const stored = localStorage.getItem("plain_bits");
+    const storedSrc = localStorage.getItem("plain_src") || "";
 
-    if (!stored) {
+    if (!stored){
       setVerifyBadge("unknown", "No stored plaintext. Encrypt in this browser to verify.");
+      decryptNote.textContent = "Decrypted. (No stored plaintext to verify.)";
+      setStatus("");
       return;
     }
 
-    // Prefer full verification if backend returned full array
-    if (res && Array.isArray(res.phi_dec)) {
+    if (res && Array.isArray(res.phi_dec)){
       const decBits = res.phi_dec.join("");
       const cmp = compareBitStrings(stored, decBits);
+      if (cmp.equal) setVerifyBadge("ok", `Verified. len=${decBits.length} (stored=${storedSrc}).`);
+      else setVerifyBadge("bad", cmp.reason);
 
-      if (cmp.equal) {
-        setVerifyBadge("ok", `Verified locally. Length=${decBits.length}. (stored=${storedSrc || "unknown"})`);
-      } else {
-        setVerifyBadge("bad", cmp.reason);
-      }
+      decryptNote.textContent = `Decrypted. satisfiable=${res.satisfiable}.`;
+      setStatus("");
       return;
     }
 
-    // Fallback: backend returned only a prefix string (old name kept as phi_dec_first_128)
-    const prefix = (res && typeof res.phi_dec_first_128 === "string") ? res.phi_dec_first_128 : null;
-    if (prefix) {
-      const n = Math.min(stored.length, prefix.length);
-      const cmpN = compareBitStrings(stored.slice(0, n), prefix.slice(0, n));
+    const prefix = (res && typeof res.phi_dec_prefix === "string") ? res.phi_dec_prefix
+                : (res && typeof res.phi_dec_first_128 === "string") ? res.phi_dec_first_128
+                : null;
 
-      if (cmpN.equal) {
-        setVerifyBadge("ok", `Verified first ${n} bits (prefix only).`);
-      } else {
-        setVerifyBadge("bad", cmpN.reason + ` (first ${n})`);
-      }
+    if (prefix){
+      const n = Math.min(stored.length, prefix.length);
+      const cmpN = compareBitStrings(stored.slice(0,n), prefix.slice(0,n));
+      if (cmpN.equal) setVerifyBadge("ok", `Verified first ${n} bits (prefix only).`);
+      else setVerifyBadge("bad", cmpN.reason + ` (first ${n})`);
+      decryptNote.textContent = "Decrypted (prefix-only verification).";
+      setStatus("");
       return;
     }
 
     setVerifyBadge("unknown", "No phi_dec (or prefix) returned to verify.");
+    decryptNote.textContent = "Decrypted, but no bits returned for verification.";
+    setStatus("");
 
-  } catch (e) {
+  }catch(e){
     prettyInto(outDEC, e);
+    decryptNote.textContent = `Decrypt failed: ${e.error || JSON.stringify(e)}`;
     setStatus("Decrypt failed.");
     setVerifyBadge("unknown", "Decrypt failed; nothing to verify.");
   }
 });
+
+/* ---------------------------
+   Policy Tree Builder (binary AND/OR)
+---------------------------- */
+const builderEl = document.getElementById("policyBuilder");
+const policyOutEl = document.getElementById("policy");
+const btnResetPolicy = document.getElementById("btnResetPolicy");
+const btnToCustomPolicy = document.getElementById("btnToCustomPolicy");
+const policyCustomTextEl = document.getElementById("policyCustomText");
+
+let policyMode = "builder"; // builder | custom
+let _nodeId = 0;
+function nid(){ _nodeId += 1; return "n" + _nodeId; }
+function makeLeaf(attrIdx=0){ return { id: nid(), type: "leaf", attrIdx }; }
+function makeOp(op="or", left=makeLeaf(0), right=makeLeaf(1)){
+  return { id: nid(), type: "op", op, left, right };
+}
+// default: or(and(attr0,attr1), attr2)
+let policyTree = makeOp("or", makeOp("and", makeLeaf(0), makeLeaf(1)), makeLeaf(2));
+
+function attrOptionsHTML(selected){
+  let html = "";
+  for (let i = 0; i < ATTR_N; i++){
+    const meta = ATTR_BY_IDX[i];
+    const label = meta ? meta.label : `attr${i}`;
+    html += `<option value="${i}" ${i===selected ? "selected":""}>${label}</option>`;
+  }
+  return html;
+}
+function serializePolicy(node){
+  if (!node) return "";
+  if (node.type === "leaf") return `attr${node.attrIdx}`;
+  return `${node.op}(${serializePolicy(node.left)},${serializePolicy(node.right)})`;
+}
+
+const policyPrettyEl = document.getElementById("policyPretty");
+
+function prettyPolicyString(raw){
+  if (!raw) return "";
+  return raw.replace(/attr(\d+)/g, (m, nStr) => {
+    const i = parseInt(nStr, 10);
+    const meta = ATTR_BY_IDX[i];
+    return meta ? meta.label : m; // fallback to attrN
+  });
+}
+
+function updatePolicyOutput(){
+  let raw = "";
+  if (policyMode === "custom") {
+    raw = (policyCustomTextEl.value || "").trim();
+  } else {
+    raw = serializePolicy(policyTree);
+  }
+
+  policyOutEl.value = raw;
+
+  if (policyPrettyEl) {
+    policyPrettyEl.value = prettyPolicyString(raw);
+  }
+}
+
+function renderNode(node){
+  if (node.type === "leaf"){
+    return `
+      <div class="border rounded-lg p-3 bg-white">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-xs text-gray-500 font-semibold">LEAF</div>
+          <button type="button" class="btnPromote text-xs underline text-gray-600" data-id="${node.id}">
+            Make AND/OR
+          </button>
+        </div>
+        <div class="mt-2">
+          <label class="block text-xs text-gray-600 mb-1">Attribute</label>
+          <select class="leafAttr w-full border rounded-lg px-2 py-2 text-sm font-mono" data-id="${node.id}">
+            ${attrOptionsHTML(node.attrIdx)}
+          </select>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="border rounded-lg p-3 bg-white">
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-xs text-gray-500 font-semibold">NODE</div>
+        <button type="button" class="btnDemote text-xs underline text-gray-600" data-id="${node.id}">
+          Make Leaf
+        </button>
+      </div>
+      <div class="mt-2">
+        <label class="block text-xs text-gray-600 mb-1">Operator</label>
+        <select class="opSelect w-full border rounded-lg px-2 py-2 text-sm font-semibold" data-id="${node.id}">
+          <option value="and" ${node.op==="and" ? "selected" : ""}>and</option>
+          <option value="or"  ${node.op==="or"  ? "selected" : ""}>or</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        <div>
+          <div class="text-xs text-gray-500 mb-1">Left</div>
+          ${renderNode(node.left)}
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 mb-1">Right</div>
+          ${renderNode(node.right)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function findNodeAndParent(root, id, parent=null, side=null){
+  if (!root) return null;
+  if (root.id === id) return { node: root, parent, side };
+  if (root.type === "op"){
+    return findNodeAndParent(root.left, id, root, "left")
+        || findNodeAndParent(root.right, id, root, "right");
+  }
+  return null;
+}
+function rerenderPolicy(){
+  builderEl.innerHTML = renderNode(policyTree);
+  updatePolicyOutput();
+}
+builderEl.addEventListener("change", (e) => {
+  if (policyMode !== "builder") return;
+  const t = e.target;
+  if (t.classList.contains("opSelect")){
+    const hit = findNodeAndParent(policyTree, t.dataset.id);
+    if (hit && hit.node.type === "op") hit.node.op = t.value;
+    updatePolicyOutput();
+  }
+  if (t.classList.contains("leafAttr")){
+    const hit = findNodeAndParent(policyTree, t.dataset.id);
+    if (hit && hit.node.type === "leaf") hit.node.attrIdx = parseInt(t.value, 10);
+    updatePolicyOutput();
+  }
+});
+builderEl.addEventListener("click", (e) => {
+  if (policyMode !== "builder") return;
+  const t = e.target;
+
+  if (t.classList.contains("btnPromote")){
+    const hit = findNodeAndParent(policyTree, t.dataset.id);
+    if (!hit) return;
+    const { node, parent, side } = hit;
+    if (node.type === "leaf"){
+      const a = node.attrIdx;
+      const b = Math.min(a + 1, ATTR_N - 1);
+      const newNode = makeOp("or", makeLeaf(a), makeLeaf(b));
+      if (!parent) policyTree = newNode;
+      else parent[side] = newNode;
+      rerenderPolicy();
+    }
+  }
+
+  if (t.classList.contains("btnDemote")){
+    const hit = findNodeAndParent(policyTree, t.dataset.id);
+    if (!hit) return;
+    const { node, parent, side } = hit;
+    if (node.type === "op"){
+      let cur = node;
+      while (cur && cur.type === "op") cur = cur.left;
+      const chosen = (cur && cur.type === "leaf") ? cur.attrIdx : 0;
+      const newLeaf = makeLeaf(chosen);
+      if (!parent) policyTree = newLeaf;
+      else parent[side] = newLeaf;
+      rerenderPolicy();
+    }
+  }
+});
+btnResetPolicy.addEventListener("click", () => {
+  policyMode = "builder";
+  policyCustomTextEl.classList.add("hidden");
+  policyTree = makeOp("or", makeOp("and", makeLeaf(0), makeLeaf(1)), makeLeaf(2));
+  rerenderPolicy();
+});
+btnToCustomPolicy.addEventListener("click", () => {
+  policyMode = "custom";
+  policyCustomTextEl.classList.remove("hidden");
+  policyCustomTextEl.value = policyOutEl.value || "";
+  updatePolicyOutput();
+  policyCustomTextEl.focus();
+});
+policyCustomTextEl.addEventListener("input", () => {
+  if (policyMode === "custom") updatePolicyOutput();
+});
+rerenderPolicy();
 </script>
+
 </body>
 </html>
